@@ -1,17 +1,24 @@
 package org.ludwiggj
 
-import org.apache.spark._
+import org.apache.spark.sql.SparkSession
 
 import scala.math.random
 
 /** Computes an approximation to pi */
 object SparkPi {
   def main(args: Array[String]) {
-    val conf = new SparkConf().setAppName("Spark Pi").setMaster("local[*]")
-    val spark = new SparkContext(conf)
+
+    val spark = SparkSession
+      .builder()
+      .appName("GitHub push counter")
+      .master("local[*]")
+      .config("spark.sql.warehouse.dir", "file:///c:/tmp/spark-warehouse")
+      .getOrCreate()
+
+    val sc = spark.sparkContext
     val slices = if (args.length > 0) args(0).toInt else 2
     val n = 100000 * slices
-    val count = spark.parallelize(1 to n, slices).map { i =>
+    val count = sc.parallelize(1 to n, slices).map { i =>
       val x = random * 2 - 1
       val y = random * 2 - 1
       if (x*x + y*y < 1) 1 else 0
