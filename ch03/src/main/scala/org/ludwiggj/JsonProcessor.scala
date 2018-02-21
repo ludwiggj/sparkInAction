@@ -13,7 +13,7 @@ object JsonProcessor {
       .config("spark.sql.warehouse.dir", "file:///c:/tmp/spark-warehouse")
       .getOrCreate()
 
-    val homeDir = System.getenv("HOME")
+    val homeDir = System.getenv("HOME") + "\\code"
     val inputPath = homeDir + "\\sparkInAction\\github-archive\\2015-03-01-0.json"
     val ghLog: DataFrame = spark.sqlContext.read.json(inputPath)
 

@@ -13,7 +13,7 @@ object GitHubDay {
       .config("spark.sql.warehouse.dir", "file:///c:/tmp/spark-warehouse")
       .getOrCreate()
 
-    val homeDir = System.getenv("HOME")
+    val homeDir = System.getenv("HOME") + "\\code"
     val inputPath = homeDir + "\\sparkInAction\\github-archive\\*.json"
     val ghLog = spark.sqlContext.read.json(inputPath)
 
