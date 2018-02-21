@@ -1,6 +1,6 @@
 package org.ludwiggj
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import scala.io.Source.fromFile
 
@@ -15,7 +15,7 @@ object JsonProcessor {
 
     val homeDir = System.getenv("HOME")
     val inputPath = homeDir + "\\sparkInAction\\github-archive\\2015-03-01-0.json"
-    val ghLog = spark.sqlContext.read.json(inputPath)
+    val ghLog: DataFrame = spark.sqlContext.read.json(inputPath)
 
     println(s"Log has ${ghLog.count()} entries")
 
