@@ -23,7 +23,7 @@ object MarketingDeeperAnalysis {
    // Names of products with totals sold
     val txsByProductId: RDD[(Int, Array[String])] = tranData.map(tx => (tx(3).toInt, tx))
 
-    val totalSoldByProductId = txsByProductId.mapValues(tx => tx(5).toDouble).reduceByKey(_ + _)
+    val totalSoldByProductId: RDD[(Int, Double)] = txsByProductId.mapValues(tx => tx(5).toDouble).reduceByKey(_ + _)
 
     // Load products
     // -----------------
@@ -34,7 +34,7 @@ object MarketingDeeperAnalysis {
     val prodData: RDD[(Int, Array[String])] =
       sc.textFile(inputDataDir + "\\data_products.txt").map(_.split("#")).map(p => (p(0).toInt, p))
 
-    val soldProductTotals = totalSoldByProductId.join(prodData).collect()
+    val soldProductTotals: Array[(Int, (Double, Array[String]))] = totalSoldByProductId.join(prodData).collect()
 
     println(">>>>> soldProductTotals >>>>>")
 
@@ -45,7 +45,7 @@ object MarketingDeeperAnalysis {
     println(s"soldProductTotals (entries) = ${soldProductTotals.size}")
 
     // List of all products, including those that didn't sell yesterday
-    val allProductTotals = prodData.leftOuterJoin(totalSoldByProductId).collect()
+    val allProductTotals: Array[(Int, (Array[String], Option[Double]))] = prodData.leftOuterJoin(totalSoldByProductId).collect()
 
     println(">>>>> allProductTotals >>>>>")
 
@@ -57,7 +57,7 @@ object MarketingDeeperAnalysis {
 
     // List of all products that didn't sell yesterday
 
-    println(">>>>> Products that didn't sell yesterday >>>>>")
+    println(">>>>> Products that didn't sell yesterday (leftOuterJoin) >>>>>")
 
     val productsThatDidNotSell = allProductTotals.filter { case (_, (_, amount)) => amount.isEmpty }
 
@@ -69,9 +69,9 @@ object MarketingDeeperAnalysis {
 
     // Now try right outer join
 
-    println(">>>>> Products that didn't sell yesterday (AGAIN) >>>>>")
+    println(">>>>> Products that didn't sell yesterday (rightOuterJoin) >>>>>")
 
-    val allProductTotalsRight = totalSoldByProductId.rightOuterJoin(prodData).collect()
+    val allProductTotalsRight: Array[(Int, (Option[Double], Array[String]))] = totalSoldByProductId.rightOuterJoin(prodData).collect()
 
     val missingProducts = allProductTotalsRight.filter(x => x._2._1 == None).map(x => x._2._2)
     missingProducts.foreach(p => println(p.mkString(", ")))
@@ -82,13 +82,19 @@ object MarketingDeeperAnalysis {
 
     println(">>>>> All product and sales info (full outer join) >>>>>")
 
-    val caboodle = prodData.fullOuterJoin(totalSoldByProductId).collect()
+    val caboodle: Array[(Int, (Option[Array[String]], Option[Double]))] = prodData.fullOuterJoin(totalSoldByProductId).collect()
 
     caboodle.foreach {
-      case (prodId, (product, totalOption)) => println(s"$prodId, [${product.map(_.mkString(", "))}], $totalOption")
+      case (prodId, (productOption, totalOption)) => println(s"$prodId, [${productOption.map(_.mkString(", "))}], $totalOption")
     }
 
     val noProductSales = caboodle.filter { case (_, (_, amount)) => amount.isEmpty }
-    println(noProductSales.size)
+    println(s"Number of products that didn't sell: ${noProductSales.size}")
+
+    // Can also use subtractByKey to find the products that haven't sold
+    val missingProds = prodData.subtractByKey(totalSoldByProductId).values
+
+    println(">>>>> Products that didn't sell yesterday (subtractByKey) >>>>>")
+    missingProds.foreach(p => println(p.mkString(", ")))
   }
 }
