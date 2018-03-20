@@ -1,7 +1,6 @@
 package org.ludwiggj
 
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.SparkSession
 
 object MarketingDeeperAnalysis {
 
@@ -20,7 +19,7 @@ object MarketingDeeperAnalysis {
     val tranFile = sc.textFile(inputDataDir + "\\data_transactions.txt")
     val tranData: RDD[Array[String]] = tranFile.map(_.split("#"))
 
-   // Names of products with totals sold
+    // Names of products with totals sold
     val txsByProductId: RDD[(Int, Array[String])] = tranData.map(tx => (tx(3).toInt, tx))
 
     val totalSoldByProductId: RDD[(Int, Double)] = txsByProductId.mapValues(tx => tx(5).toDouble).reduceByKey(_ + _)
@@ -32,17 +31,17 @@ object MarketingDeeperAnalysis {
     //          0              1                    2                    3
     // product ID # product name # product unit price # quantity available
     val prodData: RDD[(Int, Array[String])] =
-      sc.textFile(inputDataDir + "\\data_products.txt").map(_.split("#")).map(p => (p(0).toInt, p))
+    sc.textFile(inputDataDir + "\\data_products.txt").map(_.split("#")).map(p => (p(0).toInt, p))
 
-    val soldProductTotals: Array[(Int, (Double, Array[String]))] = totalSoldByProductId.join(prodData).collect()
+    val soldProductTotals: RDD[(Int, (Double, Array[String]))] = totalSoldByProductId.join(prodData)
 
     println(">>>>> soldProductTotals >>>>>")
 
-    soldProductTotals.foreach {
+    soldProductTotals.collect().foreach {
       case (prodId, (total, product)) => println(s"$prodId, $total, [${product.mkString(", ")}]")
     }
 
-    println(s"soldProductTotals (entries) = ${soldProductTotals.size}")
+    println(s"soldProductTotals (entries) = ${soldProductTotals.collect().size}")
 
     // List of all products, including those that didn't sell yesterday
     val allProductTotals: Array[(Int, (Array[String], Option[Double]))] = prodData.leftOuterJoin(totalSoldByProductId).collect()
@@ -96,5 +95,18 @@ object MarketingDeeperAnalysis {
 
     println(">>>>> Products that didn't sell yesterday (subtractByKey) >>>>>")
     missingProds.foreach(p => println(p.mkString(", ")))
+
+    // Cogroups
+    println(">>>>> All product and sales info (cogroup) >>>>>")
+    val productTotalsCogroup = totalSoldByProductId.cogroup(prodData)
+
+    productTotalsCogroup.foreach(
+      x => println(s"Id [${x._1}] Total [${x._2._1.headOption.getOrElse(0)}] Product [${x._2._2.headOption.getOrElse(Array()).mkString(", ")}]")
+    )
+
+    val sortedProducts = soldProductTotals.sortBy(_._2._2(1))
+    sortedProducts.collect().foreach {
+      case (prodId, (total, product)) => println(s"$prodId, $total, [${product.mkString(", ")}]")
+    }
   }
 }
