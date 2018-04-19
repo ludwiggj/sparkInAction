@@ -8,6 +8,9 @@ object GitHubDayParameterised {
   def main(args: Array[String]) {
     val spark = SparkSession
       .builder()
+      .master("local[*]")
+      .appName("GitHub parameterised")
+      .config("spark.sql.warehouse.dir", "file:///c:/tmp/spark-warehouse")
       .getOrCreate()
 
     val ghLog = spark.sqlContext.read.json(args(0))

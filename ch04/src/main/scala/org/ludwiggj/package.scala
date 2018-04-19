@@ -8,8 +8,8 @@ package object ludwiggj {
     .master("local[*]")
     .config("spark.sql.warehouse.dir", "file:///c:/tmp/spark-warehouse")
 
-  val homeDir = System.getenv("HOME") + "\\code"
-  val dataDir = homeDir + "\\sparkInAction\\data\\ch04"
-  val inputDataDir = dataDir + "\\input"
-  val outputDataDir = dataDir + "\\output"
+  val resourcesDir = s"${System.getProperty("user.dir")}/ch04/src/main/resources"
+
+  val inputDataDir = s"$resourcesDir/input"
+  val outputDataDir = s"$resourcesDir/output"
 }

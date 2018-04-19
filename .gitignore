@@ -1,2 +1,2 @@
 output
-github-archive/*.json
+**/github-archive/*.json

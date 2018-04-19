@@ -13,8 +13,7 @@ object JsonProcessor {
       .config("spark.sql.warehouse.dir", "file:///c:/tmp/spark-warehouse")
       .getOrCreate()
 
-    val homeDir = System.getenv("HOME") + "\\code"
-    val inputPath = homeDir + "\\sparkInAction\\github-archive\\2015-03-01-0.json"
+    val inputPath = s"$resourcesDir/github-archive/2015-03-01-0.json"
     val ghLog: DataFrame = spark.sqlContext.read.json(inputPath)
 
     println(s"Log has ${ghLog.count()} entries")
@@ -32,7 +31,7 @@ object JsonProcessor {
     val ordered = grouped.orderBy(grouped("count").desc)
     ordered.show(5)
 
-    val empPath = homeDir + "\\sparkInAction\\ch03\\src\\main\\resources\\ghEmployees.txt"
+    val empPath = s"$resourcesDir/ghEmployees.txt"
     val employees = Set() ++ (
       for {
         line <- fromFile(empPath).getLines

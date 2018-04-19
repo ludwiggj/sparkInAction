@@ -1,6 +1,6 @@
 package org.ludwiggj
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import scala.io.Source.fromFile
 
@@ -13,13 +13,11 @@ object GitHubDay {
       .config("spark.sql.warehouse.dir", "file:///c:/tmp/spark-warehouse")
       .getOrCreate()
 
-    val homeDir = System.getenv("HOME") + "\\code"
-    val inputPath = homeDir + "\\sparkInAction\\github-archive\\*.json"
-    val ghLog = spark.sqlContext.read.json(inputPath)
+    val ghLog: DataFrame = spark.sqlContext.read.json(s"$resourcesDir/github-archive/*.json")
 
     println(s"Log has ${ghLog.count()} entries")
 
-    val pushes = ghLog.filter("type = 'PushEvent'")
+    val pushes: DataFrame = ghLog.filter("type = 'PushEvent'")
 
     println(s"Log has ${pushes.count()} push events")
 
@@ -32,7 +30,7 @@ object GitHubDay {
     val ordered = grouped.orderBy(grouped("count").desc)
     ordered.show(5)
 
-    val empPath = homeDir + "\\sparkInAction\\ch03\\src\\main\\resources\\ghEmployees.txt"
+    val empPath = s"$resourcesDir/ghEmployees.txt"
     val employees = Set() ++ (
       for {
         line <- fromFile(empPath).getLines
