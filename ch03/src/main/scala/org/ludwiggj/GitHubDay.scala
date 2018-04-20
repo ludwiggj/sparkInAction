@@ -19,16 +19,10 @@ object GitHubDay {
 
     val pushes: DataFrame = ghLog.filter("type = 'PushEvent'")
 
-    println(s"Log has ${pushes.count()} push events")
-
-    pushes.printSchema()
-    pushes.show(5)
+    println(s"\nLog has ${pushes.count()} push events")
 
     val grouped = pushes.groupBy("actor.login").count
-    grouped.show(5)
-
     val ordered = grouped.orderBy(grouped("count").desc)
-    ordered.show(5)
 
     val empPath = s"$resourcesDir/ghEmployees.txt"
     val employees = Set() ++ (
@@ -36,8 +30,6 @@ object GitHubDay {
         line <- fromFile(empPath).getLines
       } yield line.trim
       )
-
-    println(employees.size)
 
     val sc = spark.sparkContext
     val bcEmployees = sc.broadcast(employees)
@@ -48,6 +40,7 @@ object GitHubDay {
     import spark.implicits._
 
     val filtered = ordered.filter(isEmployee($"login"))
+    println("\nTop 20 employees:")
     filtered.show()
   }
 }

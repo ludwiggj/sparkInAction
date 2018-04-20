@@ -18,8 +18,9 @@ object LicenseProcessor {
     println(s"No of lines: ${licLines.count()}")
 
     val licenseLines = licLines.filter(line => line.contains("license"))
-    println(s"No of license lines: ${licenseLines.count()}")
+    println(s"\nNo of license lines: ${licenseLines.count()}")
 
+    println("\nHere are the lines:")
     licenseLines.foreach(println)
   }
 }
