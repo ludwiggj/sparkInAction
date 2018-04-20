@@ -11,10 +11,15 @@ object LicenseProcessor {
       .config("spark.sql.warehouse.dir", "file:///c:/tmp/spark-warehouse")
       .getOrCreate()
 
-    val licenseFile = s"${System.getProperty("user.dir")}/ch02/src/main/resources/LICENSE"
+    val licenseFile = s"$resourcesDir/LICENSE"
 
     val sc = spark.sparkContext
     val licLines = sc.textFile(licenseFile)
-    println(licLines.count())
+    println(s"No of lines: ${licLines.count()}")
+
+    val licenseLines = licLines.filter(line => line.contains("license"))
+    println(s"No of license lines: ${licenseLines.count()}")
+
+    licenseLines.foreach(println)
   }
 }
