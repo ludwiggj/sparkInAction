@@ -2,7 +2,7 @@ package org.ludwiggj
 
 object Zipping {
   def main(args: Array[String]): Unit = {
-    val spark = sparkSessionBuilder.getOrCreate()
+    val spark = sparkSession(noOfNodes = Some(3))
 
     val sc = spark.sparkContext
 

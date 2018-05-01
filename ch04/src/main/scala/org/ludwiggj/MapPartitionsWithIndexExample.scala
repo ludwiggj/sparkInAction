@@ -4,7 +4,7 @@ object MapPartitionsWithIndexExample {
 
   def main(args: Array[String]): Unit = {
 
-    val spark = sparkSessionBuilder.getOrCreate()
+    val spark = sparkSession(noOfNodes = Some(3))
 
     // def mapPartitionsWithIndex[U](f: (Int, Iterator[T]) ⇒ Iterator[U], preservesPartitioning: Boolean = false)
     //                              (implicit arg0: ClassTag[U]): RDD[U]

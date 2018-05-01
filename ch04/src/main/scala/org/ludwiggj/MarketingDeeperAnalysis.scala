@@ -5,7 +5,7 @@ import org.apache.spark.rdd.RDD
 object MarketingDeeperAnalysis {
 
   def main(args: Array[String]) {
-    val spark = sparkSessionBuilder.getOrCreate()
+    val spark = sparkSession(noOfNodes = Some(3))
 
     val sc = spark.sparkContext
 

@@ -4,7 +4,7 @@ object GlomExample {
 
   def main(args: Array[String]): Unit = {
 
-    val spark = sparkSessionBuilder.getOrCreate()
+    val spark = sparkSession(noOfNodes = Some(3))
 
     val list = List.fill(500)(scala.util.Random.nextInt(100))
     val rdd = spark.sparkContext.parallelize(list, 30)
