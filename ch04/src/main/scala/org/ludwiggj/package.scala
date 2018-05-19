@@ -11,6 +11,7 @@ package object ludwiggj {
     var sparkBuilder = SparkSession
       .builder()
       .config("spark.sql.warehouse.dir", "file:///c:/tmp/spark-warehouse")
+      .config("spark.driver.host", "localhost")
 
     sparkBuilder = noOfNodes match {
       case Some(noOfNodesVal) =>

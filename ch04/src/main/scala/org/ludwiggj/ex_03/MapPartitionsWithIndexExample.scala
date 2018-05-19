@@ -1,4 +1,7 @@
-package org.ludwiggj
+package org.ludwiggj.ex_03
+
+import org.apache.spark.rdd.RDD
+import org.ludwiggj.sparkSession
 
 object MapPartitionsWithIndexExample {
 
@@ -15,23 +18,30 @@ object MapPartitionsWithIndexExample {
 
     // In this example, we add partition no to each element of an RDD
 
-    val rdd = spark.sparkContext.parallelize(
-      List("yellow", "red", "blue", "cyan", "black"), 3
+    val rdd: RDD[String] = spark.sparkContext.parallelize(
+      List("yellow", "red", "blue", "cyan", "black"), numSlices = 3
     )
 
-    val mapped = rdd.mapPartitionsWithIndex {
+    println(rdd.partitions.length)
+
+    val mappedRDD: RDD[String] = rdd.mapPartitionsWithIndex {
       // 'index' represents the partition number
       // 'iterator' to iterate through all elements in the partition
       (index, iterator) => {
-        println("Called in Partition -> " + index)
         val myList = iterator.toList
-        // In a normal user case, we will do the
-        // the initialization(ex : initializing database)
+
+        println(s"$myList called in Partition -> $index")
+
+        // In a normal user case, we will do the initialization(ex : initializing database)
         // before iterating through each element
         myList.map(x => x + " -> " + index).iterator
       }
     }
 
-    mapped.collect().foreach(println)
+    mappedRDD.collect().foreach(println)
+
+    // Pause so we can look at the jobs/stages via Spark UI
+//    System.in.read()
+//    spark.stop()
   }
 }

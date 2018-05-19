@@ -12,7 +12,7 @@ object CoalesceAndPartitionExample {
   }
 
   def writePartitionData(df: DataFrame, partitionId: String): Unit = {
-    val dfPath = s"$outputDataDir\\partitions_df$partitionId"
+    val dfPath = s"$outputDataDir\\partitions_df_$partitionId"
     deleteDirIfExists(dfPath)
     df.write.mode("overwrite").csv(dfPath)
   }
@@ -31,6 +31,8 @@ object CoalesceAndPartitionExample {
 
   // See https://hackernoon.com/managing-spark-partitions-with-coalesce-and-repartition-4050c57ad5c4
   def main(args: Array[String]): Unit = {
+
+    // (1) Determination of initial number of partitions
 
     // Master[*], no parallelism set
     // No of partitions defaults to number of cores
@@ -52,41 +54,44 @@ object CoalesceAndPartitionExample {
 
     // Master[4], parallelism set to 6
     // No of partitions = 6 (parallelism trumps!)
-    spark = sparkSession(noOfNodes = Some(4), parallelism = Some(6))
-    writePartitionData(dataFrame(spark), "1_6")
-    spark.stop()
-/*
-    // (1) coalesce combines existing partitions to avoid a full shuffle
+    val newSpark = sparkSession(noOfNodes = Some(4), parallelism = Some(6))
+
+    val df1 = dataFrame(newSpark)
+    writePartitionData(df1, "1_6")
+
+    // (2) coalesce combines existing partitions to avoid a full shuffle
 
     // The coalesce method reduces the number of partitions in a DataFrame
     // This algorithm is fast in certain situations because it minimizes data movement.
-    val df2 = dataFrame1.coalesce(2)
+    // e.g. a shuffle didn't occur here
+    val df2 = df1.coalesce(2)
     displayPartitionCount(df2)
-    writePartitionData(df2, "partitions_df2")
+    writePartitionData(df2, "2_2")
 
     // You can try to increase the number of partitions with coalesce, but it won’t work
     // The coalesce algorithm changes the number of nodes by moving data from some partitions to existing partitions.
     // This algorithm obviously cannot increase the number of partitions
-    val df3 = dataFrame1.coalesce(12)
+    // NOTE: It doesn't even show as a spark job!
+    val df3 = df1.coalesce(12)
     displayPartitionCount(df3)
 
-    // (2) The repartition algorithm does a full shuffle of the data and creates equal sized partitions of data
+    // (3) The repartition algorithm does a full shuffle of the data and creates equal sized partitions of data
 
     // The repartition method can be used to either increase or decrease the number of partitions in a DataFrame
     // The repartition algorithm does a full data shuffle and equally distributes the data among the partitions.
     // It does not attempt to minimize data movement like the coalesce algorithm.
-    val df4 = dataFrame1.repartition(2)
+    val df4 = df1.repartition(2)
     displayPartitionCount(df4)
-    writePartitionData(df4, "partitions_df4")
+    writePartitionData(df4, "3_2")
 
     // The repartition method can be used to increase the number of partitions as well
     // The repartition method does a full shuffle of the data, so the number of partitions can be increased
-    val df5 = dataFrame1.repartition(12)
+    val df5 = df1.repartition(12)
     displayPartitionCount(df5)
-    writePartitionData(df5, "partitions_df5")
+    writePartitionData(df5, "3_12")
 
-    // Repartition by column
-
+    // (4) Repartition by column
+    import newSpark.implicits._
     val people = List(
       (10, "blue"),
       (13, "red"),
@@ -94,12 +99,14 @@ object CoalesceAndPartitionExample {
       (99, "red"),
       (67, "blue")
     )
-    val peopleDf = people.toDF("age", "color")
-    displayPartitionCount(peopleDf)
-    writePartitionData(peopleDf, "partitions_peopleDf")
 
-    val colourDf = peopleDf.repartition($"color")
+    val peopleDf = people.toDF("age", "colour")
+    displayPartitionCount(peopleDf)
+    writePartitionData(peopleDf, "people")
+
+    val colourDf = peopleDf.repartition($"colour")
     displayPartitionCount(colourDf)
+    writePartitionData(colourDf, "colour")
 
     // When partitioning by a column, Spark will create a minimum of 200 partitions by default.
     // This example will have two partitions with data and 198 empty partitions.
@@ -111,6 +118,9 @@ object CoalesceAndPartitionExample {
     // 10,blue
     // 15,blue
     // 67,blue
-    */
+
+    // Pause so we can look at the jobs/stages via Spark UI
+//    System.in.read()
+//    spark.stop()
   }
 }
